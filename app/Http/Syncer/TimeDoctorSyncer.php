@@ -9,7 +9,7 @@ class TimeDoctorSyncer
     {
         foreach ($users as $user)
         {
-            $mapped_user = UserMapper::where('time_doctor_user_id', $user['user_id'])->first();
+            $mapped_user = UserMapper::where('email', $user['email'])->first();
             if (!$mapped_user) {
                 $mapped_user = UserMapper::create([
                     'full_name'             => $user['full_name'],
@@ -21,6 +21,7 @@ class TimeDoctorSyncer
             else {
                 $mapped_user->update([
                     'time_doctor_response'  => json_encode($user),
+                    'time_doctor_user_id'   => $user['user_id'],
                 ]);
             }
         }

@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Fetcher\ClickUpFetcher;
+use App\Http\Syncer\ClickUpSyncer;
+use App\Logger;
 use Illuminate\Console\Command;
 
 class ClickUpFetchAllTasks extends Command
@@ -37,6 +40,13 @@ class ClickUpFetchAllTasks extends Command
      */
     public function handle()
     {
-        return 0;
+        $team = ClickUpFetcher::getTeam();
+        if ($team) {
+            $teamId = $team['id'];
+            $members = $team['members'];
+            ClickUpSyncer::syncUser($members);
+
+            ClickUpFetcher::getSpaces($teamId);
+        }
     }
 }
