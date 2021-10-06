@@ -19,6 +19,7 @@ class CreateTaskMappersTable extends Migration
             $table->string('click_up_task_id')->nullable();
             $table->json('time_doctor_response')->nullable();
             $table->json('click_up_response')->nullable();
+            $table->string('click_task_url')->nullable();
             $table->timestamps();
         });
     }

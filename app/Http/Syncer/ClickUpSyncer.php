@@ -2,6 +2,7 @@
 
 namespace App\Http\Syncer;
 
+use App\Models\TaskMapper;
 use App\Models\UserMapper;
 
 class ClickUpSyncer
@@ -23,6 +24,25 @@ class ClickUpSyncer
                 $mapped_user->update([
                     'click_up_response'  => json_encode($user),
                     'click_up_user_id'  => $user['user']['id'],
+                ]);
+            }
+        }
+    }
+
+    public static function syncTasks($tasks)
+    {
+        foreach ($tasks as $task)
+        {
+            $task_mapper = TaskMapper::where('click_up_task_id', $task['id'])->first();
+            if (!$task_mapper) {
+                $task_mapper = TaskMapper::create([
+                    'click_up_task_id' => $task['id'],
+                    'click_task_url' => $task['url'],
+                    'click_up_response' => json_encode($task)
+                ]);
+            } else {
+                $task_mapper->update([
+                    'click_up_response' => json_encode($task)
                 ]);
             }
         }

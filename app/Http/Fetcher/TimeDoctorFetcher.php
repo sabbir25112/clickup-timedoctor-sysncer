@@ -23,13 +23,13 @@ class TimeDoctorFetcher
         do {
             $request = Http::get($api, [
                 'access_token'  => $access_token,
-                'offset'        =>  $offset,
-                'limit' => self::LIMIT,
-                'consolidated' => 0,
-                'breaks_only' => 0,
-                'start_date' => $date,
-                'end_date' => $date,
-                'user_ids' => '1352467'
+                'offset'        => $offset,
+                'limit'         => self::LIMIT,
+                'consolidated'  => 0,
+                'breaks_only'   => 0,
+                'start_date'    => $date,
+                'end_date'      => $date,
+                'user_ids'      => '1352467' // this is for test only
             ]);
 
             if ($request->successful()) {
@@ -48,6 +48,57 @@ class TimeDoctorFetcher
         } while($has_next_page);
 
         return $logs;
+    }
+
+    public static function getTasks($userId)
+    {
+        $has_next_page = true;
+        $limit = 200;
+        $offset = 1;
+        $tasks = [];
+
+        $settings = Settings::timedoctor();
+        $access_token = $settings->access_token;
+        $api = env('TIME_DOCTOR_BASE_URL') . '/companies/' . env('TIME_DOCTOR_COMPANY_ID') . "/users/$userId/tasks";
+
+        do {
+            $request = Http::get($api, [
+                'access_token'  => $access_token,
+                'offset'        => $offset,
+                'limit'         => $limit,
+                'status'        => 'all',
+            ]);
+
+            if ($request->failed() && $request->status() == self::UNAUTHENTICATED_STATUS_CODE) {
+                $is_regenerated = self::setAccessToken($settings);
+                if ($is_regenerated) {
+                    $request = Http::get($api, [
+                        'access_token'  => $access_token,
+                        'offset'        => $offset,
+                        'limit'         => $limit,
+                        'status'        => 'all',
+                    ]);
+                }
+            }
+
+            if ($request->successful()) {
+                $response = $request->json();
+                $count = $response['count'];
+
+                Logger::verbose("Offset: $offset, Limit: $limit, Count: ". count($response['tasks']));
+
+                $tasks = array_merge($tasks, $response['tasks']);
+                if ($count < $limit + $offset || count($response['tasks']) == 0) {
+                    $has_next_page = false;
+                } else {
+                    $offset += $limit;
+                }
+            } else {
+                $has_next_page = false;
+            }
+        } while ($has_next_page);
+
+        return $tasks;
     }
 
     public static function getUsers($try = 1)

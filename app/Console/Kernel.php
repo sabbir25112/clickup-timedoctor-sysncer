@@ -3,6 +3,9 @@
 namespace App\Console;
 
 use App\Console\Commands\ClickUpFetchAllTasks;
+use App\Console\Commands\DeleteClickUpTimeLogs;
+use App\Console\Commands\FetchClickUpTimeLogs;
+use App\Console\Commands\TimeDoctorFetchAllTasks;
 use App\Console\Commands\TimeDoctorWorkLogFetcher;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -16,7 +19,10 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         TimeDoctorWorkLogFetcher::class,
-        ClickUpFetchAllTasks::class
+        ClickUpFetchAllTasks::class,
+        FetchClickUpTimeLogs::class,
+        DeleteClickUpTimeLogs::class,
+        TimeDoctorFetchAllTasks::class,
     ];
 
     /**

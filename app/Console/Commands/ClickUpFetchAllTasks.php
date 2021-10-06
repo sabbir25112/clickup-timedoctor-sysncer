@@ -40,13 +40,51 @@ class ClickUpFetchAllTasks extends Command
      */
     public function handle()
     {
+        Logger::verbose("getting team information");
+
         $team = ClickUpFetcher::getTeam();
         if ($team) {
             $teamId = $team['id'];
+
+            Logger::verbose("processing teamId: $teamId");
+
             $members = $team['members'];
             ClickUpSyncer::syncUser($members);
 
-            ClickUpFetcher::getSpaces($teamId);
+            Logger::verbose("getting spaces");
+
+            $spaces = ClickUpFetcher::getSpaces($teamId);
+
+            foreach ($spaces as $space)
+            {
+                $spaceId = $space['id'];
+
+                Logger::verbose("processing spaceId: $spaceId");
+                Logger::verbose("getting folders for spaceId: $spaceId");
+
+                $folders = ClickUpFetcher::getFolders($spaceId);
+
+                foreach ($folders as $folder)
+                {
+                    $folderId = $folder['id'];
+                    Logger::verbose("processing folderId: $folderId");
+
+                    $lists = $folder['lists'];
+
+                    Logger::verbose("processing ". count($lists) ." lists for folderId: $folderId");
+
+                    foreach ($lists as $list)
+                    {
+                        $listId = $list['id'];
+                        Logger::verbose("processing listId: $listId");
+
+                        $max_page = (int) ($list['task_count'] / 100);
+                        $tasks = ClickUpFetcher::getTasks($listId, $max_page);
+
+                        ClickUpSyncer::syncTasks($tasks);
+                    }
+                }
+            }
         }
     }
 }
