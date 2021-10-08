@@ -46,8 +46,8 @@ class FetchClickUpTimeLogs extends Command
      */
     public function handle()
     {
-        Logger::verbose("processing completed");
-        return 0;
+//        Logger::verbose("processing completed");
+//        return 0;
 
         $clickUp_settings = Settings::clickup();
         $access_token = $clickUp_settings->access_token;
