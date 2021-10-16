@@ -52,7 +52,8 @@ class FetchClickUpTimeLogs extends Command
         $clickUp_settings = Settings::clickup();
         $access_token = $clickUp_settings->access_token;
 
-        $clickUp_tasks = TaskMapper::all();
+        $temp = TempClickUpTimeLog::pluck('click_up_task_id')->toArray();
+        $clickUp_tasks = TaskMapper::whereNotIn('click_up_task_id', $temp)->get();
         $count = 0;
         foreach ($clickUp_tasks as $task)
         {
@@ -74,11 +75,17 @@ class FetchClickUpTimeLogs extends Command
 
             if ($request->successful()) {
                 Logger::verbose("Storing TimeLog for taskId: $taskId");
-                TempClickUpTimeLog::create([
-                    'click_up_time_log' => json_encode($request->json()),
-                    'click_up_task_id'  => $taskId,
-                ]);
+                $tempClickUpTimeLog = TempClickUpTimeLog::where('click_up_task_id', $taskId)->first();
+                if ($tempClickUpTimeLog) {
+                    $tempClickUpTimeLog->update(['click_up_time_log' => json_encode($request->json())]);
+                } else {
+                    TempClickUpTimeLog::create([
+                        'click_up_time_log' => json_encode($request->json()),
+                        'click_up_task_id'  => $taskId,
+                    ]);
+                }
                 $count++;
+                Logger::verbose("$count item stored / updated");
             } else {
                 Logger::error("Not Successful for taskId: $taskId");
             }

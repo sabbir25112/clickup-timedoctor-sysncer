@@ -57,7 +57,7 @@ class TimeDoctorWorkLogFetcher extends Command
             foreach ($dates as $date)
             {
                 $worklogs = TimeDoctorFetcher::getWorkLog($date->date);
-                TimeDoctorSyncer::syncWorkLog($worklogs);
+                TimeDoctorSyncer::storeWorkLogIntoDB($worklogs);
                 dd(count($worklogs));
             }
         } else {
@@ -76,9 +76,9 @@ class TimeDoctorWorkLogFetcher extends Command
                     'date' => $after_last_date->toDateString()
                 ]);
 
-                return [$date];
+                return collect($date);
             }
-            return [];
+            return collect([]);
         }
         return $dates;
     }

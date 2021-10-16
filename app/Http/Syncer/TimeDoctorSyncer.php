@@ -27,25 +27,28 @@ class TimeDoctorSyncer
         }
     }
 
-    public static function syncWorkLog($logs)
+    public static function storeWorkLogIntoDB($logs)
     {
         foreach ($logs as $log)
         {
-            dd($log);
-            $has_worklog = WorklogMapper::where('time_doctor_id', $log['id'])->count();
+            $logId = $log['id'];
+            $has_worklog = WorklogMapper::where('time_doctor_id', $logId)->first();
             if ($has_worklog) continue;
 
-//            WorklogMapper::create([
-//                'time_doctor_id'        => $log['id'],
-//                'time_doctor_response'  => json_encode($log)
-//            ]);
-
-            self::syncTask();
+            WorklogMapper::create([
+                'time_doctor_id'        => $logId,
+                'time_doctor_response'  => json_encode($log)
+            ]);
         }
     }
 
     public static function syncTask($log)
     {
 
+    }
+
+    public static function getClickUpTaskId($timeDoctorTaskId)
+    {
+        dd($timeDoctorTaskId);
     }
 }

@@ -70,7 +70,7 @@ class ClickUpFetcher
         $settings = Settings::clickup();
         $access_token = $settings->access_token;
 
-        $api = env('CLICK_UP_BASE_URL') . "/space/$spaceId/folder";
+        $api = env('CLICK_UP_BASE_URL') . "/space/$spaceId/folder?archived=true";
 
         $request = Http::withHeaders([
             'Authorization' => $access_token
@@ -105,8 +105,9 @@ class ClickUpFetcher
             $request = Http::withHeaders([
                 'Authorization' => $access_token
             ])->get($api, [
-                'page'      => $page,
-                'subtasks'  => true
+                'page'              => $page,
+                'subtasks'          => true,
+                'include_closed'    => true,
             ]);
 
             if ($request->header('X-RateLimit-Remaining') < self::RATE_LIMIT_BOUNDARY) {
