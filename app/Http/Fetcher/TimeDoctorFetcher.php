@@ -1,7 +1,11 @@
 <?php namespace App\Http\Fetcher;
 
+use App\Http\Syncer\ClickUpSyncer;
 use App\Logger;
 use App\Models\Settings;
+use App\Models\TaskMapper;
+use App\Models\UserMapper;
+use App\Models\WorklogMapper;
 use Illuminate\Support\Facades\Http;
 
 class TimeDoctorFetcher
@@ -132,6 +136,66 @@ class TimeDoctorFetcher
         return [];
     }
 
+    public static function getTaskFromWorkLog(WorklogMapper $workLog)
+    {
+        $time_doctor_response = json_decode($workLog->time_doctor_response, true);
+        $taskId = $time_doctor_response['task_id'];
+        $task = TaskMapper::where("time_doctor_task_id", $taskId)->first();
+        if ($task == null)
+        {
+            $userId = $time_doctor_response['user_id'];
+            $settings = Settings::timedoctor();
+            $access_token = $settings->access_token;
+
+            $api = env('TIME_DOCTOR_BASE_URL') . '/companies/' . env('TIME_DOCTOR_COMPANY_ID') . "/users/$userId/tasks/$taskId";
+
+            $request = Http::get($api, [
+                'access_token'  => $access_token,
+            ]);
+
+            if ($request->successful())
+            {
+                $response = $request->json();
+                // $response = json_decode('{"id":69809418,"task_id":69809418,"project_id":16836083,"project_name":"NeXafe Général","task_name":"Plan marketing 2021","active":true,"user_id":1352467,"assigned_by":1352467,"url":"https://webapi.timedoctor.com/v1.1/companies/718573/users/1352467/tasks/69809418","task_link":"https://app.clickup.com/t/but930","status":"Active"}', true);
+                $taskUrl = $response['task_link'];
+                if ($taskUrl == null) return null;
+
+                $clickUpTaskId = self::getClickUpTaskIdFromUrl($taskUrl);
+
+                $task = TaskMapper::where(function ($query) use ($clickUpTaskId, $taskUrl) {
+                    return $query->where('click_up_task_id', $clickUpTaskId)->orWhere('click_task_url', $taskUrl);
+                })->first();
+
+                if ($task == null) {
+                    $taskResponse = ClickUpFetcher::getTask($clickUpTaskId);
+                    if ($taskResponse != null) {
+                        ClickUpSyncer::syncTasks([$taskResponse]);
+                    }
+
+                    $task = TaskMapper::where(function ($query) use ($clickUpTaskId, $taskUrl) {
+                        return $query->where('click_up_task_id', $clickUpTaskId)->orWhere('click_task_url', $taskUrl);
+                    })->first();
+                }
+
+                if ($task != null) {
+                    $task->update([
+                        'time_doctor_task_id' => $taskId,
+                        'time_doctor_response'=> json_encode($response)
+                    ]);
+                }
+            }
+        }
+        return $task;
+    }
+
+    public static function getUserFromWorkLog(WorklogMapper $workLog)
+    {
+        $time_doctor_response = json_decode($workLog->time_doctor_response, true);
+        $userId = $time_doctor_response['user_id'];
+        $user = UserMapper::where('time_doctor_user_id', $userId)->first();
+        return $user;
+    }
+
     public static function setAccessToken(Settings $settings)
     {
         Logger::info("trying to regenerate access token");
@@ -157,5 +221,11 @@ class TimeDoctorFetcher
         }
         Logger::error("can't generate access token properly. please try manually");
         return false;
+    }
+
+    public static function getClickUpTaskIdFromUrl($url)
+    {
+        $url_sections = explode('/', $url);
+        return end($url_sections);
     }
 }

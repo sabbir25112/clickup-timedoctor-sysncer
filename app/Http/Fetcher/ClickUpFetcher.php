@@ -70,7 +70,7 @@ class ClickUpFetcher
         $settings = Settings::clickup();
         $access_token = $settings->access_token;
 
-        $api = env('CLICK_UP_BASE_URL') . "/space/$spaceId/folder?archived=true";
+        $api = env('CLICK_UP_BASE_URL') . "/space/$spaceId/folder";
 
         $request = Http::withHeaders([
             'Authorization' => $access_token
@@ -86,6 +86,31 @@ class ClickUpFetcher
         if ($request->successful()) {
             $response = $request->json();
             return $response['folders'] ?? [];
+        }
+        return [];
+    }
+
+    public static function getFolderLessList($spaceId)
+    {
+        $settings = Settings::clickup();
+        $access_token = $settings->access_token;
+
+        $api = env('CLICK_UP_BASE_URL') . "/space/$spaceId/list";
+
+        $request = Http::withHeaders([
+            'Authorization' => $access_token
+        ])->get($api);
+
+        if ($request->header('X-RateLimit-Remaining') < self::RATE_LIMIT_BOUNDARY) {
+            $resetTime = Carbon::createFromTimestamp($request->header('X-Ratelimit-Reset'));
+            $willBeBackIn = $resetTime->toDateTimeString();
+            Logger::verbose("RATE LIMIT BOUNDARY CROSSED. WILL RESUME IN $willBeBackIn");
+            sleep($resetTime->diffInSeconds() + 1);
+        }
+
+        if ($request->successful()) {
+            $response = $request->json();
+            return $response['lists'] ?? [];
         }
         return [];
     }
@@ -125,5 +150,20 @@ class ClickUpFetcher
         }
 
         return $final_response;
+    }
+
+    public static function getTask($taskId)
+    {
+        $settings = Settings::clickup();
+        $access_token = $settings->access_token;
+
+        $api = env('CLICK_UP_BASE_URL') . "/task/$taskId";
+        $request = Http::withHeaders([
+            'Authorization' => $access_token
+        ])->get($api);
+        if ($request->successful()) {
+            return $request->json();
+        }
+        return null;
     }
 }

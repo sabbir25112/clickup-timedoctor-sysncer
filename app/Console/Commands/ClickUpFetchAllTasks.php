@@ -73,18 +73,29 @@ class ClickUpFetchAllTasks extends Command
 
                     Logger::verbose("processing ". count($lists) ." lists for folderId: $folderId");
 
-                    foreach ($lists as $list)
-                    {
-                        $listId = $list['id'];
-                        Logger::verbose("processing listId: $listId");
-
-                        $max_page = (int) ($list['task_count'] / 100);
-                        $tasks = ClickUpFetcher::getTasks($listId, $max_page);
-
-                        ClickUpSyncer::syncTasks($tasks);
-                    }
+                    $this->syncTaskOfLists($lists);
                 }
+
+                Logger::verbose("getting folder-less lists for spaceId: $spaceId");
+                $lists = ClickUpFetcher::getFolderLessList($spaceId);
+
+                Logger::verbose("processing ". count($lists) ." folder-less lists");
+                $this->syncTaskOfLists($lists);
             }
+        }
+    }
+
+    private function syncTaskOfLists($lists)
+    {
+        foreach ($lists as $list)
+        {
+            $listId = $list['id'];
+            Logger::verbose("processing listId: $listId");
+
+            $max_page = (int) ($list['task_count'] / 100);
+            $tasks = ClickUpFetcher::getTasks($listId, $max_page);
+
+            ClickUpSyncer::syncTasks($tasks);
         }
     }
 }

@@ -41,14 +41,4 @@ class TimeDoctorSyncer
             ]);
         }
     }
-
-    public static function syncTask($log)
-    {
-
-    }
-
-    public static function getClickUpTaskId($timeDoctorTaskId)
-    {
-        dd($timeDoctorTaskId);
-    }
 }
