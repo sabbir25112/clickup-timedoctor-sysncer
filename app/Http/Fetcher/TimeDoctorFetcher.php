@@ -21,6 +21,7 @@ class TimeDoctorFetcher
         $has_next_page = true;
         $offset = 0;
         $logs = [];
+        $call_count = 0;
 
         $settings = Settings::timedoctor();
         $access_token = $settings->access_token;
@@ -57,9 +58,13 @@ class TimeDoctorFetcher
             else {
                 $has_next_page = false;
             }
+            $call_count++;
         } while($has_next_page);
 
-        return $logs;
+        return [
+            'worklog' => $logs,
+            'call_count' => $call_count
+        ];
     }
 
     public static function getTasks($userId)
@@ -146,6 +151,7 @@ class TimeDoctorFetcher
 
     public static function getTaskFromWorkLog(WorklogMapper $workLog)
     {
+        $call_count = 0;
         $time_doctor_response = json_decode($workLog->time_doctor_response, true);
         $taskId = $time_doctor_response['task_id'];
         $task = TaskMapper::where("time_doctor_task_id", $taskId)->first();
@@ -160,14 +166,18 @@ class TimeDoctorFetcher
             $request = Http::get($api, [
                 'access_token'  => $access_token,
             ]);
+            $call_count++;
 
             if ($request->successful())
             {
                 $response = $request->json();
                 // $response = json_decode('{"id":69809418,"task_id":69809418,"project_id":16836083,"project_name":"NeXafe Général","task_name":"Plan marketing 2021","active":true,"user_id":1352467,"assigned_by":1352467,"url":"https://webapi.timedoctor.com/v1.1/companies/718573/users/1352467/tasks/69809418","task_link":"https://app.clickup.com/t/but930","status":"Active"}', true);
                 $taskUrl = $response['task_link'];
-                if ($taskUrl == null) return null;
-
+                if ($taskUrl == null) return [
+                    'task' => null,
+                    'call_count' => $call_count
+                ];
+                Logger::info($taskUrl);
                 $clickUpTaskId = self::getClickUpTaskIdFromUrl($taskUrl);
 
                 $task = TaskMapper::where(function ($query) use ($clickUpTaskId, $taskUrl) {
@@ -193,7 +203,10 @@ class TimeDoctorFetcher
                 }
             }
         }
-        return $task;
+        return [
+            'task' => $task,
+            'call_count' => $call_count
+        ];
     }
 
     public static function getUserFromWorkLog(WorklogMapper $workLog)

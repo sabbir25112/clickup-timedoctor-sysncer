@@ -15,8 +15,8 @@ class CreateWorklogMappersTable extends Migration
     {
         Schema::create('worklog_mappers', function (Blueprint $table) {
             $table->id();
-            $table->integer('time_doctor_id')->nullable();
-            $table->integer('click_up_id')->nullable();
+            $table->string('time_doctor_id')->nullable();
+            $table->string('click_up_id')->nullable();
             $table->json('time_doctor_response')->nullable();
             $table->json('click_up_response')->nullable();
             $table->timestamps();

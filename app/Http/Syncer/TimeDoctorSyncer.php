@@ -2,6 +2,7 @@
 
 use App\Models\UserMapper;
 use App\Models\WorklogMapper;
+use Carbon\Carbon;
 
 class TimeDoctorSyncer
 {
@@ -36,8 +37,9 @@ class TimeDoctorSyncer
             if ($has_worklog) continue;
 
             WorklogMapper::create([
+                'date'                  => Carbon::parse($log['start_time'])->toDateString(),
                 'time_doctor_id'        => $logId,
-                'time_doctor_response'  => json_encode($log)
+                'time_doctor_response'  => json_encode($log),
             ]);
         }
     }

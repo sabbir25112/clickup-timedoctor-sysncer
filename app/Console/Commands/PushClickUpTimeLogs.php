@@ -43,13 +43,26 @@ class PushClickUpTimeLogs extends Command
      */
     public function handle()
     {
+        $call_count = 0;
         $settings = Settings::clickup();
         $access_token = $settings->access_token;
         $teamId = env('CLICK_UP_TEAM_ID');
         $workLogs = WorklogMapper::where('synced_with_click_up', false)->get();
         foreach ($workLogs as $workLog)
         {
-            $task = TimeDoctorFetcher::getTaskFromWorkLog($workLog);
+            $taskInfo = TimeDoctorFetcher::getTaskFromWorkLog($workLog);
+            $task = $taskInfo['task'];
+
+            $task_call = $taskInfo['call_count'];
+            $call_count += $task_call;
+            Logger::verbose("CallCount: $call_count");
+            if ($call_count > 80)
+            {
+                $call_count = 0;
+                Logger::verbose("CallCount Reset, Sleep for 30 seconds");
+                sleep(30);
+            }
+
             $user = TimeDoctorFetcher::getUserFromWorkLog($workLog);
             if ($task && $user) {
                 $time_doctor_response = json_decode($workLog->time_doctor_response, true);
@@ -83,14 +96,21 @@ class PushClickUpTimeLogs extends Command
 
 
                 if ($request->successful()) {
+                    $response = $request->json();
                     $workLog->update([
-                        'click_up_response'     => json_encode($request->json()),
+                        'click_up_id'           => $response['data']['id'],
+                        'click_up_response'     => json_encode($response),
                         'synced_with_click_up'  => true,
                     ]);
                     Logger::info($workLog->id . " successfully synced");
                 }
+            } else {
+                $workLog->update([
+                    'synced_with_click_up'  => true,
+                ]);
+                Logger::info($workLog->id . " can not sync");
             }
         }
-        dd("DONE");
+        Logger::verbose("Done");
     }
 }
