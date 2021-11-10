@@ -33,12 +33,14 @@ class TimeDoctorSyncer
         foreach ($logs as $log)
         {
             $logId = $log['id'];
-            $has_worklog = WorklogMapper::where('time_doctor_id', $logId)->first();
-            if ($has_worklog) continue;
+            $userId = $log['user_id'];
+            $has_workLog = WorklogMapper::where('time_doctor_id', $logId)->first();
+            if ($has_workLog) continue;
 
             WorklogMapper::create([
                 'date'                  => Carbon::parse($log['start_time'])->toDateString(),
                 'time_doctor_id'        => $logId,
+                'time_doctor_user_id'   => $userId,
                 'time_doctor_response'  => json_encode($log),
             ]);
         }

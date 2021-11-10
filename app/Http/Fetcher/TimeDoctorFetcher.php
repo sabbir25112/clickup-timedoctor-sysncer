@@ -15,7 +15,7 @@ class TimeDoctorFetcher
     const MAX_TRY = 2;
     const LIMIT = 500;
 
-    public static function getWorkLog($date)
+    public static function getWorkLog($date, $users = [])
     {
         // return json_decode('[{"id":"2070848801","length":"6025","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"69809418","task_name":"Plan marketing 2021","task_url":"","project_id":"16836083","project_name":"NeXafe Général","start_time":"2021-09-21 07:58:40","end_time":"2021-09-21 09:39:05","edited":"0","last_modified":"","work_mode":"0"},{"id":"2070879509","length":"4728","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"67321937","task_name":"Accompagnement Marketing & Stratégique","task_url":"","project_id":"16840585","project_name":"Storetraffic - General","start_time":"2021-09-21 10:16:52","end_time":"2021-09-21 11:35:40","edited":"0","last_modified":"","work_mode":"0"},{"id":"2070824870","length":"4276","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"67521160","task_name":"Agora - development","task_url":"","project_id":"16836925","project_name":"Agora Media","start_time":"2021-09-21 05:39:28","end_time":"2021-09-21 06:50:44","edited":"0","last_modified":"","work_mode":"0"},{"id":"2070926941","length":"3117","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"60845721","task_name":"Point Sebastien","task_url":"","project_id":"1688292","project_name":"Zerda Digital","start_time":"2021-09-21 14:54:16","end_time":"2021-09-21 15:46:13","edited":"0","last_modified":"","work_mode":"0"},{"id":"2070871001","length":"2034","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"68376890","task_name":"ZD-Biz dev","task_url":"","project_id":"16836236","project_name":"Zerda Digital","start_time":"2021-09-21 09:39:08","end_time":"2021-09-21 10:13:02","edited":"0","last_modified":"","work_mode":"0"},{"id":"2070842521","length":"657","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"78550738","task_name":"ZD- Academy","task_url":"","project_id":"16836236","project_name":"Zerda Digital","start_time":"2021-09-21 07:25:02","end_time":"2021-09-21 07:35:59","edited":"0","last_modified":"","work_mode":"0"},{"id":"2070837709","length":"654","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"67521160","task_name":"Agora - development","task_url":"","project_id":"16836925","project_name":"Agora Media","start_time":"2021-09-21 06:55:00","end_time":"2021-09-21 07:05:54","edited":"0","last_modified":"","work_mode":"0"},{"id":"2070845447","length":"650","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"78550738","task_name":"ZD- Academy","task_url":"","project_id":"16836236","project_name":"Zerda Digital","start_time":"2021-09-21 07:41:35","end_time":"2021-09-21 07:52:25","edited":"0","last_modified":"","work_mode":"0"},{"id":"2070848367","length":"365","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"68376890","task_name":"ZD-Biz dev","task_url":"","project_id":"16836236","project_name":"Zerda Digital","start_time":"2021-09-21 07:52:25","end_time":"2021-09-21 07:58:30","edited":"0","last_modified":"","work_mode":"0"},{"id":"2070845446","length":"336","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"78550738","task_name":"ZD- Academy","task_url":"","project_id":"16836236","project_name":"Zerda Digital","start_time":"2021-09-21 07:35:59","end_time":"2021-09-21 07:41:35","edited":"0","last_modified":"","work_mode":"3"},{"id":"2070837708","length":"256","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"67521160","task_name":"Agora - development","task_url":"","project_id":"16836925","project_name":"Agora Media","start_time":"2021-09-21 06:50:44","end_time":"2021-09-21 06:55:00","edited":"0","last_modified":"","work_mode":"3"},{"id":"2070839590","length":"215","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"67521160","task_name":"Agora - development","task_url":"","project_id":"16836925","project_name":"Agora Media","start_time":"2021-09-21 07:07:49","end_time":"2021-09-21 07:11:24","edited":"0","last_modified":"","work_mode":"0"},{"id":"2070839589","length":"115","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"67521160","task_name":"Agora - development","task_url":"","project_id":"16836925","project_name":"Agora Media","start_time":"2021-09-21 07:05:54","end_time":"2021-09-21 07:07:49","edited":"0","last_modified":"","work_mode":"3"},{"id":"2070840575","length":"115","user_id":"1352467","user_name":"Chiheb  Ben Aissa ","task_id":"67521160","task_name":"Agora - development","task_url":"","project_id":"16836925","project_name":"Agora Media","start_time":"2021-09-21 07:13:24","end_time":"2021-09-21 07:15:19","edited":"0","last_modified":"","work_mode":"0"}]', true);
         $has_next_page = true;
@@ -33,7 +33,7 @@ class TimeDoctorFetcher
         do {
             Logger::verbose("fetching for offset $offset");
 
-            $request = Http::get($api, [
+            $requestBody = [
                 'access_token'  => $access_token,
                 'offset'        => $offset,
                 'limit'         => self::LIMIT,
@@ -43,7 +43,12 @@ class TimeDoctorFetcher
                 'end_date'      => $date,
                 // 'user_ids'      => '1352467' // this is for test only
                 'project_ids'   => $projects,
-            ]);
+            ];
+            if (count($users)) {
+                $requestBody['user_ids'] = implode(',', $users);
+            }
+
+            $request = Http::get($api, $requestBody);
 
             if ($request->successful()) {
                 $response = $request->json();
