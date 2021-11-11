@@ -6,8 +6,6 @@ use App\Http\Fetcher\TimeDoctorFetcher;
 use App\Http\Syncer\TimeDoctorSyncer;
 use App\Logger;
 use App\Models\DateSettings;
-use App\Models\Settings;
-use App\Models\WorklogMapper;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -56,16 +54,10 @@ class TimeDoctorWorkLogFetcher extends Command
 //            $date = $date->addDay(1);
 //        }
 //        dd("DONE");
-
-        $is_successful = TimeDoctorFetcher::setAccessToken(Settings::timedoctor());
-        if (!$is_successful) {
-            Logger::error("TimeDoctor AccessToken Can't Generate");
-            return 0;
-        }
-
         $call_count = 0;
         Logger::verbose("getting dates to pull");
-        $dates = $this->getDatesToSync();
+        // $dates = $this->getDatesToSync();
+        $dates = [(object) ['date' => Carbon::today()->toDateString()]];
         Logger::info(count($dates). " date(s) found to pull");
         foreach ($dates as $date)
         {
@@ -76,7 +68,7 @@ class TimeDoctorWorkLogFetcher extends Command
             Logger::verbose("CallCount: $call_count");
             Logger::verbose("Syncing Data to DB");
             TimeDoctorSyncer::storeWorkLogIntoDB($worklogs['worklog']);
-            $date->update(['is_pulled_from_time_doctor' => true]);
+            // $date->update(['is_pulled_from_time_doctor' => true]);
             if ($call_count > 80) {
                 $call_count = 0;
                 Logger::verbose("CallCount Reset, Sleep for 30 seconds");
