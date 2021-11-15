@@ -35,8 +35,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('run:SyncEr')
             ->timezone('UTC')
-            ->everyMinute();
-            // ->dailyAt('01:00');
+            ->dailyAt('01:00');
     }
 
     /**

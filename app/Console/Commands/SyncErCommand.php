@@ -42,9 +42,6 @@ class SyncErCommand extends Command
      */
     public function handle()
     {
-        Logger::info("TESTING AT " . Carbon::now()->toDateTimeString());
-        return ;
-
         $is_successful = TimeDoctorFetcher::setAccessToken(Settings::timedoctor());
         if (!$is_successful) {
             Logger::error("TimeDoctor AccessToken Can't Generate");
