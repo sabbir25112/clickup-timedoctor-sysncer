@@ -64,11 +64,16 @@ class ResyncCommand extends Command
         $teamId = (int) env('CLICK_UP_TEAM_ID');
         $settings = Settings::clickup();
         $access_token = $settings->access_token;
+
+        Logger::verbose($workLogs->count() . ' worklog(s) need to delete');
+
         foreach ($workLogs as $workLog)
         {
             $click_up_response = json_decode($workLog->click_up_response, true);
             $intervalId = $click_up_response['data']['id'];
             $taskId = $click_up_response['data']['task']['id'];
+
+            Logger::verbose('Deleting : IntervalID: ' . $intervalId . ' taskID: '. $taskId);
 
             $isAlreadyDeleted = ClickUpDeletedResponse::where('click_up_interval_id', $intervalId)->count();
             if ($isAlreadyDeleted) {
@@ -86,6 +91,8 @@ class ResyncCommand extends Command
 
             if ($request->status() != 404 && $request->header('x-rateLimit-remaining') < 3) {
                 $resetTime = Carbon::createFromTimestamp($request->header('x-ratelimit-reset'));
+                $willBeBackIn = $resetTime->toDateTimeString();
+                Logger::verbose("RATE LIMIT BOUNDARY CROSSED. WILL RESUME IN $willBeBackIn");
                 sleep($resetTime->diffInSeconds() + 1);
             }
 
@@ -102,6 +109,8 @@ class ResyncCommand extends Command
                 ]);
 
                 $workLog->delete();
+
+                Logger::verbose("Deleted Successfully");
             }
         }
     }
