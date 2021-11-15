@@ -33,7 +33,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('run:SyncEr')->hourly();
+        $schedule->command('run:SyncEr')
+            ->timezone('UTC')
+            ->everyMinute();
+            // ->dailyAt('01:00');
     }
 
     /**

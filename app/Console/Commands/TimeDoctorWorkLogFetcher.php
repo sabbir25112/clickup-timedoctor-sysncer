@@ -57,7 +57,7 @@ class TimeDoctorWorkLogFetcher extends Command
         $call_count = 0;
         Logger::verbose("getting dates to pull");
         // $dates = $this->getDatesToSync();
-        $dates = [(object) ['date' => Carbon::today()->toDateString()]];
+        $dates = [(object) ['date' => Carbon::yesterday()->toDateString()]];
         Logger::info(count($dates). " date(s) found to pull");
         foreach ($dates as $date)
         {

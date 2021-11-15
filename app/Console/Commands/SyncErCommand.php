@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Http\Fetcher\TimeDoctorFetcher;
 use App\Logger;
 use App\Models\Settings;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -41,6 +42,9 @@ class SyncErCommand extends Command
      */
     public function handle()
     {
+        Logger::info("TESTING AT " . Carbon::now()->toDateTimeString());
+        return ;
+
         $is_successful = TimeDoctorFetcher::setAccessToken(Settings::timedoctor());
         if (!$is_successful) {
             Logger::error("TimeDoctor AccessToken Can't Generate");
@@ -50,5 +54,7 @@ class SyncErCommand extends Command
         $this->call('sync:user-and-projects');
         $this->call('fetch:time-doctor');
         $this->call('push:clickUp-time-logs');
+
+        Logger::info("### Scheduler Runs @ " . Carbon::now()->toDateTimeString());
     }
 }
