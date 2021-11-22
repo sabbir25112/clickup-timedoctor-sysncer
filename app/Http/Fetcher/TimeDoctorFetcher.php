@@ -218,7 +218,9 @@ class TimeDoctorFetcher
     {
         $time_doctor_response = json_decode($workLog->time_doctor_response, true);
         $userId = $time_doctor_response['user_id'];
-        $user = UserMapper::where('time_doctor_user_id', $userId)->first();
+        $user = UserMapper::where('time_doctor_user_id', $userId)
+            ->whereNotNull('click_up_user_id')
+            ->first();
         return $user;
     }
 
