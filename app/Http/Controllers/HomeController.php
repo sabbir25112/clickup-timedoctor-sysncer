@@ -182,4 +182,10 @@ class HomeController extends Controller
             }
         }
     }
+
+    public function users()
+    {
+        $users = UserMapper::all();
+        return view('users', compact('users'));
+    }
 }

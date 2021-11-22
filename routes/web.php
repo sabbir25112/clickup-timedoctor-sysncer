@@ -21,3 +21,4 @@ Auth::routes(['register' => false, 'reset' => false]);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::post('/manual-adjustment', [App\Http\Controllers\HomeController::class, 'manualAdjustment'])->name('manual-adjustment');
+Route::get('/users', [\App\Http\Controllers\HomeController::class, 'users'])->name('users');
