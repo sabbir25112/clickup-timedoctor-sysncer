@@ -50,25 +50,17 @@ class HomeController extends Controller
             'date'  => 'required|before:today',
         ]);
         $user = UserMapper::find($request->user);
-        $user = UserMapper::find(25);
         $date = $request->date;
-        $start_date = Carbon::parse('2021-06-01');
-        while(!$start_date->isToday()) {
-            $date = $start_date->toDateString();
 
-            $timeDoctorUserId = $user->time_doctor_user_id;
-            $workLogs = WorklogMapper::where('time_doctor_user_id', $timeDoctorUserId)
-                ->where('date', $date)
-                ->where('synced_with_click_up', 1)
-                ->whereNotNull('click_up_response')
-                ->get();
+        $timeDoctorUserId = $user->time_doctor_user_id;
+        $workLogs = WorklogMapper::where('time_doctor_user_id', $timeDoctorUserId)
+            ->where('date', $date)
+            ->where('synced_with_click_up', 1)
+            ->whereNotNull('click_up_response')
+            ->get();
 
-            $this->deleteClickUpWorkLogs($workLogs);
-            // $this->reSyncWorkLog($user, $date);
-
-            $start_date->addDay();
-        }
-
+        $this->deleteClickUpWorkLogs($workLogs);
+        $this->reSyncWorkLog($user, $date);
         Session::flash('status', 'Resync Successfully');
 
         return redirect()->back();
